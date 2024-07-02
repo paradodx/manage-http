@@ -17,7 +17,9 @@ public class LatticeProperties {
 
     private Boolean isGm;
 
-    private Integer chainId;
+    // private Integer chainId;
 
     private String httpUrl;
+
+    private String ledgerAbi;
 }

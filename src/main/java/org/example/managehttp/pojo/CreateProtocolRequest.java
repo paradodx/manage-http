@@ -4,23 +4,22 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.example.managehttp.utils.LatticeProperties;
 
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
+import javax.validation.constraints.*;
 
 
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class CreateProtocolRequest extends LatticeProperties {
 
-    @NotBlank
+    @NotNull
+    // @Pattern(regexp = "^[1-9][0-9]*$")
+    @Positive
+    private Integer chainId;
+
     @Pattern(regexp = "^[1-9][0-9]*$")
-    private String chainId;
+    private String suite;
 
-    @Min(value = 1)
-    private long suite;
-
-    @NotBlank
-    @Pattern(regexp = "^syntax.*}$")
+    @NotBlank(message = "Message must not be blank")
+    @Pattern(regexp = "^syntax.*}$", message = "Message must match the pattern '^syntax.*}$'")
     private String message;
 }

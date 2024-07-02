@@ -4,19 +4,19 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.example.managehttp.utils.LatticeProperties;
 
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
+import javax.validation.constraints.*;
+import java.math.BigInteger;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class UpdateProtocolRequest extends LatticeProperties {
-    @NotBlank
-    @Pattern(regexp = "^[1-9][0-9]*$")
-    private String chainId;
+    @NotNull
+    // @Pattern(regexp = "^[1-9][0-9]*$")
+    @Positive
+    private Integer chainId;
 
-    @Min(value = 1)
-    private long uri;
+    @Pattern(regexp = "^[1-9][0-9]*$")
+    private String uri;
 
     @NotBlank
     @Pattern(regexp = "^syntax.*}$")
