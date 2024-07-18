@@ -1,10 +1,14 @@
-package org.example.managehttp.pojo;
+package org.example.managehttp.pojo.CreateProtocol;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.example.managehttp.utils.LatticeProperties;
 
 import javax.validation.constraints.*;
+
+/*
+* 创建协议请求数据
+* */
 
 
 @EqualsAndHashCode(callSuper = true)

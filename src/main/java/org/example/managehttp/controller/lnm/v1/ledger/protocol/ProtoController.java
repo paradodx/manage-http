@@ -1,16 +1,19 @@
 package org.example.managehttp.controller.lnm.v1.ledger.protocol;
 
 
-import org.example.managehttp.pojo.*;
+import org.example.managehttp.pojo.CreateProtocol.CreateProtocolRequest;
+import org.example.managehttp.pojo.CreateProtocol.CreateProtocolResponse;
+import org.example.managehttp.pojo.ReadProtocol.ReadProtocolRequest;
+import org.example.managehttp.pojo.ReadProtocol.ReadProtocolResponse;
+import org.example.managehttp.pojo.UpdateProtocol.UpdateProtocolRequest;
+import org.example.managehttp.pojo.UpdateProtocol.UpdateProtocolResponse;
 import org.example.managehttp.service.ProtoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("/protocol")
+@RequestMapping("/ledger/protocol")
 public class ProtoController {
     @Autowired
     private ProtoService protoService;
@@ -26,7 +29,9 @@ public class ProtoController {
     }
 
     @PostMapping("/read")
-    public List<Protocol> readProtocol(@RequestBody @Validated ReadProtocolRequest readProtocolRequest){
-        return protoService.readProtocol(readProtocolRequest);
+    public ReadProtocolResponse readProtocol(@RequestBody @Validated ReadProtocolRequest readProtocolRequest){
+        ReadProtocolResponse response = new ReadProtocolResponse();
+        response.setProtocol(protoService.readProtocol(readProtocolRequest));
+        return response;
     }
 }

@@ -1,6 +1,10 @@
-package org.example.managehttp.pojo;
+package org.example.managehttp.pojo.CreateBusiness;
 
 import lombok.Data;
+
+/*
+* 创建业务响应数据
+* */
 
 @Data
 public class CreateBusinessResponse {

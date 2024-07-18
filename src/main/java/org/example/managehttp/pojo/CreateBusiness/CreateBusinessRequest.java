@@ -1,14 +1,15 @@
-package org.example.managehttp.pojo;
+package org.example.managehttp.pojo.CreateBusiness;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.example.managehttp.utils.LatticeProperties;
 
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Positive;
 
+/*
+* 创建业务请求数据
+* */
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class CreateBusinessRequest extends LatticeProperties {

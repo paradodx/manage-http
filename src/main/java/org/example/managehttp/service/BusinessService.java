@@ -1,8 +1,8 @@
 package org.example.managehttp.service;
 
 
-import org.example.managehttp.pojo.CreateBusinessRequest;
-import org.example.managehttp.pojo.CreateBusinessResponse;
+import org.example.managehttp.pojo.CreateBusiness.CreateBusinessRequest;
+import org.example.managehttp.pojo.CreateBusiness.CreateBusinessResponse;
 import org.springframework.stereotype.Service;
 
 @Service

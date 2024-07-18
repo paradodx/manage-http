@@ -1,12 +1,15 @@
-package org.example.managehttp.pojo;
+package org.example.managehttp.pojo.UpdateProtocol;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.example.managehttp.utils.LatticeProperties;
 
 import javax.validation.constraints.*;
-import java.math.BigInteger;
 
+
+/*
+* 更新协议请求数据
+* */
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class UpdateProtocolRequest extends LatticeProperties {
