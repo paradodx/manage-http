@@ -20,7 +20,6 @@ public class BusinessController {
 
     @PostMapping("/create")
     public CreateBusinessResponse createBusiness(@RequestBody @Validated CreateBusinessRequest createBusinessRequest){
-        System.out.println("business");
         return businessService.createBusiness(createBusinessRequest);
     }
 

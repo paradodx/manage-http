@@ -35,6 +35,7 @@ public class BusinessServiceImpl implements BusinessService {
         Address address = new Address(latticeProperties.getAccountAddressStr());
         CurrentTDBlock latestTBlock = lattice.getLatestTDBlockWithCatch(address);
         String code = ByteArrayKt.toHexString(new byte[]{49});
+
         // 新建tx
         ExecuteTxBuilder builder = ExecuteTxBuilder.Companion.builder();
         Transaction tx = builder

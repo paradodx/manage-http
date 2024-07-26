@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 
 @RestController
 @RequestMapping("/ledger")
@@ -24,7 +26,7 @@ public class LedgerController {
     private ProtoService protoService;
 
     @PostMapping("/write")
-    public WriteLedgerResponse writeLedger(@RequestBody @Validated WriteLedgerRequest writeLedgerRequest) throws Descriptors.DescriptorValidationException, IOException {
+    public WriteLedgerResponse writeLedger(@RequestBody @Validated WriteLedgerRequest writeLedgerRequest) throws Descriptors.DescriptorValidationException, IOException, NoSuchAlgorithmException, NoSuchProviderException {
         return protoService.writeLedger(writeLedgerRequest);
     }
 

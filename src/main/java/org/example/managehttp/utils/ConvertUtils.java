@@ -1,30 +1,30 @@
 package org.example.managehttp.utils;
 
 import com.example.model.extension.ByteArrayKt;
-import com.google.protobuf.DescriptorProtos;
 import com.google.protobuf.Descriptors;
-import com.google.protobuf.InvalidProtocolBufferException;
 import org.example.managehttp.factory.DynamicMsgFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Arrays;
 
-import static org.example.managehttp.utils.DynamicMsg.*;
-
 @Component
-public class Convert {
+public class ConvertUtils {
 
     @Autowired
     private DynamicMsgFactory dynamicMsgFactory;
 
+    public static String removeHexPrefix(String hexString) {
+        if (hexString.startsWith("0x")) {
+            hexString = hexString.substring(2);
+        }
+        return hexString;
+    }
+    
     public String BytesArrayToString(byte[][] bytes) {
         String[] stringArray = new String[bytes.length];
         StringBuilder sb = new StringBuilder();
@@ -41,9 +41,27 @@ public class Convert {
         return sb.toString();
     }
 
-    public byte[] ProtoToBytes(byte[][] data) {
+/*    public byte[] ProtoToBytes(byte[][] data) {
         // byte[][] -> byte[]
         return data[0];
+    }*/
+
+    public byte[] toByteArray(byte[][] data) {
+        int length = data.length;
+        int size = data[0].length;
+        byte[] bytes = new byte[length * size];
+        for (int i = 0; i < length; i++) {
+            System.arraycopy(data[i], 0, bytes, (i * size), size);
+        }
+        return bytes;
+    }
+
+    public byte[] removePaddingZeros(byte[] bytes) {
+        int index = bytes.length - 1;
+        while (index >= 0 && bytes[index] == 0) {
+            index--;
+        }
+        return Arrays.copyOf(bytes, index + 1);
     }
 
     // encryptKey
@@ -68,7 +86,7 @@ public class Convert {
     }
 
     // data
-    public String dataToJson(String message, byte[] data) throws Descriptors.DescriptorValidationException, IOException {
+    /*public String dataToJson(String message, byte[] data) throws Descriptors.DescriptorValidationException, IOException {
         int dataLength = data.length - 18;
         byte[] decodeData = new byte[dataLength];
         System.arraycopy(data, 18, decodeData, 0, dataLength);
@@ -78,13 +96,15 @@ public class Convert {
         }
         decodeData = Arrays.copyOf(decodeData, length);
         return dynamicMsgFactory.unmarshallMessageFromBytes(message, decodeData);
-
+    }*/
+    public String dataToJson(String message, byte[] data) throws Descriptors.DescriptorValidationException, IOException {
+        return dynamicMsgFactory.unmarshallMessageFromBytes(message, data);
     }
 
-    public String[] LedgerToBytes32Array(byte[] data, String uri, int version, String encryptKey) {
+    public String[] LedgerToBytes32Array(byte[] data, String uri, int version, byte[] encryptKey) {
         // encryptKey to bytes[]
-        byte encryptByte = (byte) ((encryptKey != null && !encryptKey.isEmpty()) ? 1 : 0);
-
+        byte encryptByte = (byte) (encryptKey.length > 0 ? 1 : 0);
+        
         // uri to bytes[]
         ByteBuffer uriBuffer = ByteBuffer.allocate(Long.BYTES);
         byte[] uriBytes = uriBuffer.order(ByteOrder.BIG_ENDIAN).putLong(Long.parseLong(uri)).array();

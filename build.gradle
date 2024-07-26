@@ -1,7 +1,7 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '2.7.10'
-    id 'io.spring.dependency-management' version '1.1.5'
+    id 'org.springframework.boot' version '3.3.2'
+    id 'io.spring.dependency-management' version '1.1.6'
 }
 
 group = 'org.example'
@@ -9,7 +9,7 @@ version = '0.0.1-SNAPSHOT'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(8)
+        languageVersion = JavaLanguageVersion.of(17)
     }
 }
 
@@ -27,7 +27,6 @@ repositories {
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation fileTree(dir: 'libs', includes: ['*.jar'])
     implementation 'io.jsonwebtoken:jjwt:0.9.1'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.9.23'
@@ -37,12 +36,37 @@ dependencies {
     implementation 'com.github.os72:protobuf-dynamic:1.0.1'
     implementation 'com.squareup:protoparser:4.0.3'
     implementation 'io.protostuff:protostuff-parser:2.2.27'
-    implementation 'org.slf4j:slf4j-api:1.7.36'
+    
+    implementation 'org.web3j:abi:4.9.8'
+    implementation 'org.web3j:core:4.9.8'
+    implementation 'org.web3j:utils:4.9.8'
+    
+    implementation 'com.google.code.gson:gson:2.8.9'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.9.0'
+    implementation 'com.squareup.okhttp3:okhttp-jvm:5.0.0-alpha.11'
+    implementation 'com.github.komputing.kethereum:abi:0.86.0'
+    
+    runtimeOnly 'com.github.komputing:khex:1.1.2'
+    implementation 'com.github.komputing.khex:core-jvm:1.1.2'
+    implementation 'com.github.komputing.khex:extensions-jvm:1.1.2'
 
-
-
-
-
+    implementation 'com.github.komputing:khash:1.1.1'
+    implementation 'com.github.komputing.khash:keccak-jvm:1.1.1'
+    implementation 'com.github.komputing.khash:ripemd160-jvm:1.1.1'
+    implementation 'com.github.komputing.khash:sha256-jvm:1.1.1'
+    implementation 'com.github.komputing.khash:sha512-jvm:1.1.1'
+    
+    // implementation 'org.bouncycastle:bcprov-jdk18on:1.78.1'
+    
+    implementation files(
+            "src/main/resources/libs/ahca-common-1.0.10.jar",
+            "src/main/resources/libs/bcprov-jdk15on-ahca-1.60.jar",
+            "src/main/resources/klibs/lattice.jar",
+            "src/main/resources/klibs/model.jar",
+            "src/main/resources/klibs/abi.jar",
+            "src/main/resources/klibs/rlp.jar",
+            "src/main/resources/klibs/crypto.jar"
+    )
 
     implementation 'com.esaulpaugh:headlong:12.0.0'
     compileOnly 'org.projectlombok:lombok'
@@ -51,6 +75,10 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
+
+
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+

@@ -7,5 +7,5 @@ import java.util.List;
 @Data
 public class ReadLedgerResponse {
 
-    private List<org.example.managehttp.pojo.ReadLedger.Data> dataList;
+    private List<LedgerData> dataList;
 }

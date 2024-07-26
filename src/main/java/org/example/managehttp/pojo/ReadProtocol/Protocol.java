@@ -2,9 +2,6 @@ package org.example.managehttp.pojo.ReadProtocol;
 
 
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-
-import org.web3j.abi.datatypes.StaticStruct;
 
 
 

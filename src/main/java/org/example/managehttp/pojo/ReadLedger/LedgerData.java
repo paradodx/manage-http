@@ -1,7 +1,9 @@
 package org.example.managehttp.pojo.ReadLedger;
 
-@lombok.Data
-public class Data {
+import lombok.Data;
+
+@Data
+public class LedgerData {
 
     private String number;
 
