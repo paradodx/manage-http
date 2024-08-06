@@ -42,7 +42,7 @@ public class MD5Test {
     @Test
     public void test02() throws Descriptors.DescriptorValidationException, IOException {
         byte[] data = dynamicMsgFactory.marshallMessageFromJson(message, jsonData);
-        String decodeData = dynamicMsgFactory.unmarshallFromByte(message, data);
+        String decodeData = dynamicMsgFactory.unmarshallMessageFromBytes(message, data);
         System.out.println(Arrays.toString(data));
         System.out.println(decodeData);
     }
