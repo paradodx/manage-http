@@ -16,7 +16,7 @@ public class ProtocTool {
     private String source;
 
     private String filePath;
-
+    
     private String getCommand() {
         return String.format("protoc --descriptor_set_out=%s --proto_path=%s %s", this.out, this.source, this.filePath);
     }

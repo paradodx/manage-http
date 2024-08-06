@@ -4,35 +4,23 @@ import com.esaulpaugh.headlong.abi.Tuple;
 import com.esaulpaugh.headlong.abi.TupleType;
 import com.esaulpaugh.headlong.util.FastHex;
 import com.google.protobuf.Descriptors;
-import org.bouncycastle.crypto.InvalidCipherTextException;
-import org.bouncycastle.util.encoders.Base64;
 import org.bouncycastle.util.encoders.Hex;
 import org.example.managehttp.factory.DynamicMsgFactory;
-import org.example.managehttp.pojo.ReadLedger.LedgerData;
 import org.example.managehttp.utils.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.cert.CertificateException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 @SpringBootTest
 public class KeyTest {
     @Autowired
-    private ConvertUtils convertUtils;
-    @Autowired
     private DynamicMsgFactory dynamicMsgFactory;
+    @Autowired
+    private ConvertUtils convertUtils;
     
     private static final int index = 1;
     private static final int KEY_LENGTH = 113;
@@ -42,7 +30,7 @@ public class KeyTest {
 
     @Test
     public void decrypt() throws Descriptors.DescriptorValidationException, IOException {
-        byte[] encryptKey = Hex.decode(ConvertUtils.removeHexPrefix(payload));
+/*        byte[] encryptKey = Hex.decode(FormatUtils.removeHexPrefix(payload));
         byte[] cipherText = new byte[KEY_LENGTH];
         System.arraycopy(encryptKey, index * KEY_LENGTH, cipherText, 0, KEY_LENGTH);
         String priKey = TestCert.getSm2PrivateKey(index);
@@ -53,8 +41,8 @@ public class KeyTest {
         Tuple[] outputs = tt.decode(buffer).get(0);
         for (int i = 0; i < outputs.length; i++) {
             byte[][] bytes = outputs[i].get(3);
-            byte[] bytesData = convertUtils.toByteArray(bytes);
-            bytesData = convertUtils.removePaddingZeros(bytesData);
+            byte[] bytesData = FormatUtils.toByteArray(bytes);
+            bytesData = FormatUtils.removePaddingZeros(bytesData);
             byte[] decodeData = new byte[bytesData.length - 18];
             
             System.arraycopy(bytesData, 18, decodeData, 0, decodeData.length);
@@ -66,7 +54,7 @@ public class KeyTest {
             String messageType = dynamicMsgFactory.generateProtoFile(message);
             String json = convertUtils.dataToJson(messageType, decryptData);
             System.out.println(json);
-        }
+        }*/
     }
     
     

@@ -17,13 +17,7 @@ public class ConvertUtils {
 
     @Autowired
     private DynamicMsgFactory dynamicMsgFactory;
-
-    public static String removeHexPrefix(String hexString) {
-        if (hexString.startsWith("0x")) {
-            hexString = hexString.substring(2);
-        }
-        return hexString;
-    }
+    
     
     public String BytesArrayToString(byte[][] bytes) {
         String[] stringArray = new String[bytes.length];
@@ -41,29 +35,6 @@ public class ConvertUtils {
         return sb.toString();
     }
 
-/*    public byte[] ProtoToBytes(byte[][] data) {
-        // byte[][] -> byte[]
-        return data[0];
-    }*/
-
-    public byte[] toByteArray(byte[][] data) {
-        int length = data.length;
-        int size = data[0].length;
-        byte[] bytes = new byte[length * size];
-        for (int i = 0; i < length; i++) {
-            System.arraycopy(data[i], 0, bytes, (i * size), size);
-        }
-        return bytes;
-    }
-
-    public byte[] removePaddingZeros(byte[] bytes) {
-        int index = bytes.length - 1;
-        while (index >= 0 && bytes[index] == 0) {
-            index--;
-        }
-        return Arrays.copyOf(bytes, index + 1);
-    }
-
     // encryptKey
     public boolean isEncrypted(byte[] data) {
         return data[0] == 1;
@@ -73,30 +44,26 @@ public class ConvertUtils {
     public int protocolVersion(byte[] data) {
         return data[1];
     }
+    
+    // uri
+    public String uri(byte[] data){
+        byte[] uriBytes = new byte[8];
+        System.arraycopy(data, 2, uriBytes, 0, 8);
+        return Long.toString(ByteBuffer.wrap(uriBytes).order(ByteOrder.BIG_ENDIAN).getLong());
+    }
 
     // timestamp
-    public String timestamp(byte[] data) {
+    public Long timestamp(byte[] data) {
         byte[] timestampBytes = new byte[8];
         System.arraycopy(data, 10, timestampBytes, 0, 8);
         long timestamp = 0;
         for (int i = 0; i < 8; i++) {
             timestamp |= ((long) timestampBytes[i] & 0xff) << (8 * i);
         }
-        return Long.toString(timestamp);
+        return timestamp;
     }
 
     // data
-    /*public String dataToJson(String message, byte[] data) throws Descriptors.DescriptorValidationException, IOException {
-        int dataLength = data.length - 18;
-        byte[] decodeData = new byte[dataLength];
-        System.arraycopy(data, 18, decodeData, 0, dataLength);
-        int length = decodeData.length;
-        while (length > 0 && decodeData[length - 1] == 0) {
-            length--;
-        }
-        decodeData = Arrays.copyOf(decodeData, length);
-        return dynamicMsgFactory.unmarshallMessageFromBytes(message, decodeData);
-    }*/
     public String dataToJson(String message, byte[] data) throws Descriptors.DescriptorValidationException, IOException {
         return dynamicMsgFactory.unmarshallMessageFromBytes(message, data);
     }

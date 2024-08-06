@@ -6,8 +6,6 @@ import cn.aheca.common.gm.SM2Util;
 import cn.aheca.common.gm.SM4Util;
 import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.util.encoders.Hex;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -68,7 +66,7 @@ public class CryptoUtils {
     }
     
     public static byte[] SM2Decrypt(String payload){
-        byte[] encryptKey = Hex.decode(ConvertUtils.removeHexPrefix(payload));
+        byte[] encryptKey = Hex.decode(FormatUtils.removeHexPrefix(payload));
         byte[] cipherText = new byte[KEY_LENGTH];
         System.arraycopy(encryptKey, index * KEY_LENGTH, cipherText, 0, KEY_LENGTH);
         String priKey = TestCert.getSm2PrivateKey(index);

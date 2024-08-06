@@ -31,10 +31,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.9.23'
     implementation 'commons-codec:commons-codec:1.15'
-    implementation 'com.google.protobuf:protobuf-java:4.27.1'
-    implementation 'com.google.protobuf:protobuf-java-util:4.27.1'
     implementation 'com.github.os72:protobuf-dynamic:1.0.1'
     implementation 'com.squareup:protoparser:4.0.3'
+    implementation 'com.google.protobuf:protobuf-java:4.27.1'
+    implementation 'com.google.protobuf:protobuf-java-util:4.27.1'
     implementation 'io.protostuff:protostuff-parser:2.2.27'
     
     implementation 'org.web3j:abi:4.9.8'
@@ -55,12 +55,16 @@ dependencies {
     implementation 'com.github.komputing.khash:ripemd160-jvm:1.1.1'
     implementation 'com.github.komputing.khash:sha256-jvm:1.1.1'
     implementation 'com.github.komputing.khash:sha512-jvm:1.1.1'
-    
-    // implementation 'org.bouncycastle:bcprov-jdk18on:1.78.1'
-    
+
+    implementation 'org.postgresql:postgresql:42.7.3'
+    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+
+
     implementation files(
             "src/main/resources/libs/ahca-common-1.0.10.jar",
             "src/main/resources/libs/bcprov-jdk15on-ahca-1.60.jar",
+            "src/main/resources/libs/com.zkjg-abi-0.0.4.jar",
             "src/main/resources/klibs/lattice.jar",
             "src/main/resources/klibs/model.jar",
             "src/main/resources/klibs/abi.jar",
@@ -72,10 +76,10 @@ dependencies {
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:3.0.3'
+
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
-
-
 
 tasks.named('test') {
     useJUnitPlatform()

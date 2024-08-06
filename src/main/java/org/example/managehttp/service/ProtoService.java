@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public interface ProtoService {

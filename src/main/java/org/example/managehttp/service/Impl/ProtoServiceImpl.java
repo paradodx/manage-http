@@ -14,15 +14,13 @@ import com.example.model.AddressKt;
 import com.example.model.EthereumAddress;
 import com.example.model.block.CurrentTDBlock;
 import com.example.model.block.Receipt;
-import com.example.model.block.SendTBlock;
-import com.example.model.block.TBlock;
 import com.example.model.extension.ByteArrayKt;
 
 import com.google.protobuf.Descriptors;
-import org.bouncycastle.util.encoders.Hex;
 import org.example.managehttp.factory.DynamicMsgFactory;
 import org.example.managehttp.factory.LatticeFactory;
 import org.example.managehttp.factory.SignatureDataFactory;
+import org.example.managehttp.mapper.TxDataMapper;
 import org.example.managehttp.pojo.CreateProtocol.CreateProtocolRequest;
 import org.example.managehttp.pojo.CreateProtocol.CreateProtocolResponse;
 
@@ -38,6 +36,7 @@ import org.example.managehttp.pojo.WriteLedger.WriteLedgerResponse;
 import org.example.managehttp.utils.*;
 import org.example.managehttp.service.ProtoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.web3j.abi.datatypes.Type;
 
@@ -47,8 +46,8 @@ import java.nio.ByteBuffer;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 @Service
@@ -64,11 +63,14 @@ public class ProtoServiceImpl implements ProtoService {
     private ConvertUtils convert;
     @Autowired
     private DynamicMsgFactory dynamicMsgFactory;
+    @Autowired
+    private TxDataMapper txDataMapper;
 
-
+    private final ReentrantLock lock = new ReentrantLock();
+    
     // 容量/过期时间 -> 内存泄漏
-    private static final Map<Integer, String> payloadMap = new ConcurrentHashMap<>();
-    private static final AtomicInteger index = new AtomicInteger(0);
+    // private static final Map<Integer, String> payloadMap = new ConcurrentHashMap<>();
+    // private static final AtomicInteger index = new AtomicInteger(0);
     
     @Override
     public CreateProtocolResponse createProtocol(CreateProtocolRequest createProtocolRequest) {
@@ -156,7 +158,6 @@ public class ProtoServiceImpl implements ProtoService {
 
         // 获取address, 创建最新区块latestTBlock
         Address address = new Address(latticeProperties.getAccountAddressStr());
-        CurrentTDBlock latestTBlock = lattice.getLatestTDBlockWithCatch(address);
 
         // 获取Abi, 读取协议: "getAddress"
         LatticeAbi latticeAbi = new LatticeAbi(latticeProperties.getLedgerAbi());
@@ -165,23 +166,17 @@ public class ProtoServiceImpl implements ProtoService {
         String code = LatticeFunctionKt.encode(latticeFunction,
                 new Object[]{readProtocolRequest.getUri()});
 
+        CurrentTDBlock latestTBlock = lattice.getLatestTDBlockWithCatch(address);
         ExecuteTxBuilder builder = ExecuteTxBuilder.Companion.builder();
         Transaction tx = builder
                 .setBlock(latestTBlock)
                 .setCode(code)
                 .setOwner(address)
                 .setLinker(new Address("zltc_QLbz7JHiBTspUvTPzLHy5biDS9mu53mmv"))
-                .refreshTimestamp()
                 .build();
         signatureDataFactory.setSign(tx, readProtocolRequest.getChainId());
-        String hash = lattice.sendRawTBlock(tx);
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
-        Receipt receipt = lattice.getReceipt(hash);
+        
+        Receipt receipt = lattice.preExecuteContract(tx);
         String result = receipt.getContractRet();
 
         TupleType<Tuple> tt = TupleType.parse("((address,bytes32[])[])");
@@ -203,22 +198,35 @@ public class ProtoServiceImpl implements ProtoService {
         return protocols;
     }
 
+    
     @Override
     public WriteLedgerResponse writeLedger(WriteLedgerRequest writeLedgerRequest) throws Descriptors.DescriptorValidationException, IOException, NoSuchAlgorithmException, NoSuchProviderException {
+
         // 获取协议数据
         ReadProtocolRequest readProtocolRequest = new ReadProtocolRequest();
         readProtocolRequest.setChainId(writeLedgerRequest.getChainId());
         readProtocolRequest.setUri(writeLedgerRequest.getUri());
         List<Protocol> protocolList = readProtocol(readProtocolRequest);
+
         if (protocolList.size() <= writeLedgerRequest.getVersion())
             throw new RuntimeException("Protocol version does not exist, maybe it's a wrong version");
 
-        // 生成proto文件, marshall
-        String messageType = dynamicMsgFactory.generateProtoFile(protocolList.get(writeLedgerRequest.getVersion()).getMessage());
-        byte[] data = dynamicMsgFactory.marshallMessageFromProto(messageType, writeLedgerRequest.getJsonData());
+        WriteLedgerResponse response = new WriteLedgerResponse();
+        response.setDataId(writeLedgerRequest.getDataId());
 
+        String messageType;
+        byte[] data;
+        lock.lock();
+        try {
+            // 生成proto文件, marshall
+            data = dynamicMsgFactory.marshallMessageFromJson(
+                    protocolList.get(writeLedgerRequest.getVersion()).getMessage(), 
+                    writeLedgerRequest.getJsonData());
+        } finally {
+            lock.unlock();
+        }
+        
         // 生成key
-        // byte[] key = SM4Utils.generateKey();
         byte[] key = SM4Util.generateKey();
         // encrypt
         byte[] cipher = CryptoUtils.sm4Encrypt(key, data);
@@ -228,7 +236,6 @@ public class ProtoServiceImpl implements ProtoService {
 
         ILattice lattice = latticeFactory.createLattice(writeLedgerRequest.getChainId());
         Address accountAddr = new Address(latticeProperties.getAccountAddressStr());
-        CurrentTDBlock latestTBlock = lattice.getLatestTDBlockWithCatch(accountAddr);
 
         // 获取Abi, 数据存证: "writeTraceability"
         LatticeAbi latticeAbi = new LatticeAbi(latticeProperties.getLedgerAbi());
@@ -237,9 +244,9 @@ public class ProtoServiceImpl implements ProtoService {
         String code = LatticeFunctionKt.encode(latticeFunction,
                 new Object[]{writeLedgerRequest.getUri(),
                         writeLedgerRequest.getDataId(),
-                        convert.LedgerToBytes32Array(cipher, writeLedgerRequest.getUri(), writeLedgerRequest.getVersion(), key),
-                        addr});
-        
+                        convert.LedgerToBytes32Array(cipher, writeLedgerRequest.getUri(), 
+                                writeLedgerRequest.getVersion(), key), addr});
+
         // SM2 encrypt payload
         ByteArrayOutputStream byteArray = new ByteArrayOutputStream();
         for (int i = 0; i < 8; i++) {
@@ -248,29 +255,28 @@ public class ProtoServiceImpl implements ProtoService {
         }
         String payload = ByteArrayKt.toHexString(byteArray.toByteArray());
 
-        // 创建tx
-        ExecuteTxBuilder builder = ExecuteTxBuilder.Companion.builder();
-        Transaction tx = builder
-                .setBlock(latestTBlock)
-                .setCode(code)
-                .setOwner(accountAddr)
-                .setLinker(new Address("zltc_QLbz7JHiBTspUvTPzLHy5biDS9mu53mmv"))
-                .refreshTimestamp()
-                .setPayload(payload)
-                .build();
-        
-        signatureDataFactory.setSign(tx, writeLedgerRequest.getChainId());
+        lock.lock();
+        try {
+            CurrentTDBlock latestTBlock = lattice.getLatestTDBlockWithCatch(accountAddr);
+            // 创建tx
+            ExecuteTxBuilder builder = ExecuteTxBuilder.Companion.builder();
+            Transaction tx = builder
+                    .setBlock(latestTBlock)
+                    .setCode(code)
+                    .setOwner(accountAddr)
+                    .setLinker(new Address("zltc_QLbz7JHiBTspUvTPzLHy5biDS9mu53mmv"))
+                    .refreshTimestamp()
+                    .setPayload(payload)
+                    .build();
+            signatureDataFactory.setSign(tx, writeLedgerRequest.getChainId());
 
-        // tx回执
-        String hash = lattice.sendRawTBlock(tx);
-        // payload
-        int currentIndex = index.getAndIncrement();
-        payloadMap.put(currentIndex, hash);
-        
-        WriteLedgerResponse response = new WriteLedgerResponse();
-        response.setHash(hash);
-        response.setDataId(writeLedgerRequest.getDataId());
-        return response;
+            // tx回执
+            String hash = lattice.sendRawTBlock(tx);
+            response.setHash(hash);
+            return response;
+        } finally {
+            lock.unlock();
+        }
     }
 
     @Override
@@ -305,17 +311,13 @@ public class ProtoServiceImpl implements ProtoService {
                 .build();
 
         signatureDataFactory.setSign(tx, readLedgerRequest.getChainId());
-        String hash = lattice.sendRawTBlock(tx);
-
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
-        Receipt receipt = lattice.getReceipt(hash);
+        Receipt receipt = lattice.preExecuteContract(tx);
         String result = receipt.getContractRet();
-
+        
+        // 获取payload
+        List<String> payloads = txDataMapper.getPayloadByUri(readLedgerRequest.getUri());
+        
+        // 每笔code
         TupleType<Tuple> tt = TupleType.parse("((uint64,uint64,address,bytes32[])[])");
         ByteBuffer buffer = ByteBuffer.wrap(FastHex.decode(result.substring(2)));
         Tuple[] outputs = tt.decode(buffer).get(0);
@@ -332,8 +334,8 @@ public class ProtoServiceImpl implements ProtoService {
             // data
             byte[][] bytes = outputs[i].get(3);
             data.setData(bytes);
-            byte[] bytesData = convert.toByteArray(bytes);
-            bytesData = convert.removePaddingZeros(bytesData);
+            byte[] bytesData = FormatUtils.toByteArray(bytes);
+            bytesData = FormatUtils.removePaddingZeros(bytesData);
             // isEncrypt
             data.setIsEncrypted(convert.isEncrypted(bytesData));
             // timestamp
@@ -341,9 +343,12 @@ public class ProtoServiceImpl implements ProtoService {
             // protocolVersion
             data.setProtocolVersion(convert.protocolVersion(bytesData));
             // jsonData
-            String WriteHash = payloadMap.get(i);
-            SendTBlock tBlock = lattice.getTBlock(WriteHash);
-            String payload = tBlock.getPayload();
+            /*String WriteHash = payloads.get(i);
+            System.out.println(WriteHash);
+            
+            TBlock tBlock = lattice.getTBlock(WriteHash);
+            String payload = tBlock.getPayload();*/
+            String payload = payloads.get(i);
             
             byte[] SM2priKey = CryptoUtils.SM2Decrypt(payload);
             // bytesData - 18
@@ -352,9 +357,7 @@ public class ProtoServiceImpl implements ProtoService {
             
             byte[] decryptData = CryptoUtils.sm4Decrypt(SM2priKey, decodeData);
             
-            String messageType = dynamicMsgFactory.generateProtoFile(protocolList.get(data.getProtocolVersion()).getMessage());
-            
-            data.setJsonData(convert.dataToJson(messageType, decryptData));
+            data.setJsonData(convert.dataToJson(protocolList.get(data.getProtocolVersion()).getMessage(), decryptData));
             dataLists.add(data);
         }
         return dataLists;

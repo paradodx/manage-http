@@ -15,7 +15,7 @@ public class LedgerData {
 
     private String jsonData;
 
-    private String timestamp;
+    private Long timestamp;
 
     private Boolean isEncrypted;
 
